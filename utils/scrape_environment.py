@@ -6,15 +6,13 @@ import os
 import urllib2
 import logging
 import logging.handlers
-# import selenium
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
 from bs4 import BeautifulSoup
 
 
-class ScrapeEnvironment:
-    def __init__(self, url):
-        self.url = url
-        self.soup = None
-
+class ScrapeBase:
+    def __init__(self):
         # Install default logger
         self.logger = None
         self._init_logging()
@@ -30,16 +28,25 @@ class ScrapeEnvironment:
             # General logger
             self.logger = logging.getLogger('default-logger')
             self.logger.setLevel(logging.INFO)
-            # Add the log message handler to the logger
-            handler = logging.handlers.RotatingFileHandler(logfile, maxBytes=1048576, backupCount=5)  # size= 1MB
-            _format = ("%(asctime)s " + "%(levelname)s -> %(message)s")
-            _format = logging.Formatter(_format)
-            handler.setFormatter(_format)
-            self.logger.addHandler(handler)
+
+            if not len(self.logger.handlers):
+                # Add the log message handler to the logger
+                handler = logging.handlers.RotatingFileHandler(logfile, maxBytes=1048576, backupCount=5)  # size= 1MB
+                _format = ("%(asctime)s " + "%(levelname)s -> %(message)s")
+                _format = logging.Formatter(_format)
+                handler.setFormatter(_format)
+                self.logger.addHandler(handler)
 
         except:
             print "No logging"
             exit()
+
+
+class StaticEnvironment(ScrapeBase):
+    def __init__(self, url):
+        ScrapeBase.__init__(self)
+        self.url = url
+        self.soup = None
 
     def load(self, url):
         try:
@@ -55,6 +62,15 @@ class ScrapeEnvironment:
         print self.soup.prettify()
 
 
-class WebPage:
-    def __init__(self):
-        pass
+class DynamicEnvironment(ScrapeBase):
+    def __init__(self, browser=webdriver.Firefox):
+        ScrapeBase.__init__(self)
+        self.browser = browser()
+
+    def load(self, url):
+        self.browser.get(url)
+        elem = self.browser.find_element_by_name("q")
+        elem.send_keys("pycon")
+        elem.send_keys(Keys.RETURN)
+        assert "No results found." not in self.browser.page_source
+        self.browser.close()

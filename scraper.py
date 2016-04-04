@@ -3,12 +3,13 @@
 Experimental scraper module
 """
 import time
-from utils.scrape_environment import ScrapeEnvironment
+from utils.scrape_environment import StaticEnvironment
+from utils.scrape_environment import DynamicEnvironment
 
 
-class BuienradarScraperExample(ScrapeEnvironment):
+class BeautifulSoupExample(StaticEnvironment):
     def __init__(self, url):
-        ScrapeEnvironment.__init__(self, url)
+        StaticEnvironment.__init__(self, url)
         self.base_url = 'http://buienradar.nl/'
 
     def get_5_day_forecast(self):
@@ -33,14 +34,30 @@ class BuienradarScraperExample(ScrapeEnvironment):
         else:
             self.logger.info("Successfully fetched weather information from {0}".format(url))
         finally:
-            self.logger.info("Scraping took {0:d} ms".format(int((time.time()-start_time)*1000)))
+            self.logger.info("Beautifulsoup took {0:d} ms".format(int((time.time()-start_time)*1000)))
+
+
+class PythonSeleniumExample(DynamicEnvironment):
+    def __init__(self, url):
+        DynamicEnvironment.__init__(self)
+
+    def run(self):
+        start_time = time.time()
+        self.load("http://www.python.org")
+        self.logger.info("Selenium took {0:d} ms".format(int((time.time() - start_time) * 1000)))
 
 
 if __name__ != 'main':
-    scraper = BuienradarScraperExample('http://buienradar.nl/weerbericht-nederland')
+    scraper = BeautifulSoupExample('http://buienradar.nl/weerbericht-nederland')
     try:
         scraper.get_5_day_forecast()
     except:
         scraper.logger.exception("Can't fetch 5 day forecast, see log")
+
+    scraper = PythonSeleniumExample("http://www.python.org")
+    try:
+        scraper.run()
+    except:
+        scraper.logger.exception("Exception running selenium on python.org")
 
 
